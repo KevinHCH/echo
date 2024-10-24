@@ -3,9 +3,11 @@ package main
 import (
 	"echo/internal"
 	"echo/redis"
-
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -27,7 +29,11 @@ func (app *application) mount() *http.ServeMux {
 	mux.HandleFunc("/", app.NotFound)
 	return mux
 }
-
+func (app *application) shutdown() {
+	if err := app.config.redis.Close(); err != nil {
+		log.Printf("Error closing Redis client: %v", err)
+	}
+}
 func (app *application) run(mux *http.ServeMux) error {
 	server := &http.Server{
 		Addr:         app.config.addr,
@@ -38,8 +44,8 @@ func (app *application) run(mux *http.ServeMux) error {
 	}
 	log.Printf("Server starting in port: %s", app.config.addr)
 	return server.ListenAndServe()
-
 }
+
 func main() {
 	portApp, err := internal.GetEnv("PORT")
 	if err != nil {
@@ -60,5 +66,21 @@ func main() {
 		config: cfg,
 	}
 	mux := app.mount()
-	log.Fatal(app.run(mux))
+	// Create a channel to listen for interrupt signals
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start your HTTP server in a goroutine
+	go func() {
+		if err := app.run(mux); err != nil {
+			log.Fatalf("could not run server: %v", err)
+		}
+	}()
+
+	// Block until a signal is received
+	sig := <-sigs
+	log.Printf("Received signal: %s. Shutting down...", sig)
+
+	app.shutdown()
+	log.Println("Server gracefully stopped")
 }

@@ -34,7 +34,6 @@ func NewTelegramBot() (*TelegramBot, error) {
 }
 
 func (bot *TelegramBot) SendMessage(message string) error {
-
 	payload := map[string]interface{}{
 		"chat_id":                  bot.ChatID,
 		"text":                     message,
@@ -61,18 +60,3 @@ func (bot *TelegramBot) SendMessage(message string) error {
 
 	return nil
 }
-
-// func main() {
-// 	bot, err := NewTelegramBot()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	message := "Hello, this is a test message from my Go application!"
-
-// 	if err := bot.SendMessage(message); err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	log.Println("Message sent successfully!")
-// }

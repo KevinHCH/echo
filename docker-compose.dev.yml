@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v3.2
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.http.address=:80"
+    ports:
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  myapp:
+    build: .
+    ports:
+      - "8081:8080"
+    env_file:
+      - ./.env
+    labels:
+      - "traefik.http.routers.myapp.rule=Host(`echo.localhost`)"
+      - "traefik.http.services.myapp.loadbalancer.server.port=8080"
