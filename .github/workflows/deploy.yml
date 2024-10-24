@@ -1,1 +1,46 @@
 name: "deploy"
+run-name: "Deploy to server"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            # Navigate to the project directory
+            cd /home/kevin/projects/echo
+
+            # For SSL/TLS
+            if [ ! -f acme.json ]; then
+              touch acme.json
+              chmod 600 acme.json
+            fi
+
+            # Pull the latest Docker images
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            docker-compose pull
+
+            # Set environment variables and start the app
+            API_HOST=${{ secrets.API_HOST }} \
+            WORK_IP=${{ secrets.WORK_IP }} \
+            ACME_EMAIL=${{ secrets.ACME_EMAIL }} \
+            docker-compose up -d --build
+
+            # Optional: Clean up unused images
+            docker image prune -f

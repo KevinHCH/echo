@@ -7,7 +7,7 @@ services:
       - "--entrypoints.http.address=:80"
       - "--entrypoints.https.address=:443"
       - "--certificatesresolvers.myresolver.acme.httpChallenge.entryPoint=http"
-      - "--certificatesresolvers.myresolver.acme.email=your-email@example.com"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}" # Use an environment variable
       - "--certificatesresolvers.myresolver.acme.storage=/acme.json"
       - "--certificatesresolvers.myresolver.acme.tlsChallenge=true"
     ports:
@@ -16,15 +16,20 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
 
-  echo-api:
-    image: dkrkev/echo:latest
-    env_file:
-      - .env
+  echo:
+    image: ${DOCKERHUB_USERNAME}/echo:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - REDIS_URL="localhost:6973"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.echo.rule=Host(`${API_HOST}`)"
       - "traefik.http.routers.echo.entrypoints=https"
       - "traefik.http.routers.echo.tls=true"
-      - "traefik.http.middlewares.test-ipallowlist.ipallowlist.sourceRange=127.0.0.1/32,YOUR_WORK_IP/32"
+      - "traefik.http.middlewares.test-ipallowlist.ipallowlist.sourceRange=127.0.0.1/32,${WORK_IP}/32"
       - "traefik.http.middlewares.test-ipallowlist.ipallowlist.ipstrategy.depth=1"
       - "traefik.http.routers.echo.middlewares=test-ipallowlist@docker"
