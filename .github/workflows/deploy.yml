@@ -34,13 +34,21 @@ jobs:
 
             # Pull the latest Docker images
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-            docker-compose pull
 
             # Set environment variables and start the app
-            API_HOST=${{ secrets.API_HOST }} \
-            WORK_IP=${{ secrets.WORK_IP }} \
-            ACME_EMAIL=${{ secrets.ACME_EMAIL }} \
-            docker-compose up -d --build
+            # API_HOST=${{ secrets.API_HOST }} \
+            # WORK_IP=${{ secrets.WORK_IP }} \
+            # ACME_EMAIL=${{ secrets.ACME_EMAIL }} \
+
+            # run the docker image
+            docker run -d \
+              --name echo \
+              -e PORT=8080 \
+              -e TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
+              -e REDIS_URL=localhost:6379 \
+              -p 8080:8080 \
+              dkrkev/echo:latest
 
             # Optional: Clean up unused images
             docker image prune -f
