@@ -11,12 +11,17 @@ import (
 	"echo/telegram"
 )
 
+type TelegramButton struct {
+	Text string `json:"text,omitempty"`
+	URL  string `json:"url,omitempty"`
+}
 type MessageRequest struct {
-	TopicName *string `json:"topicName,omitempty"`
-	Title     *string `json:"title,omitempty"`
-	Message   string  `json:"message"`
-	Enqueue   bool    `json:"enqueue"`
-	Time      *int64  `json:"time,omitempty"`
+	TopicName *string         `json:"topicName,omitempty"`
+	Title     *string         `json:"title,omitempty"`
+	Message   string          `json:"message"`
+	Enqueue   bool            `json:"enqueue"`
+	Time      *int64          `json:"time,omitempty"`
+	Button    *TelegramButton `json:"button,omitempty"`
 }
 
 type JsonResponse struct {
@@ -68,7 +73,15 @@ func (app *application) HandleMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	if err := telegram.SendMessage(req.Message); err != nil {
+	var buttonText *string
+	var buttonURL *string
+
+	// Only set buttonText and buttonURL if button is provided in the request
+	if req.Button != nil {
+		buttonText = &req.Button.Text
+		buttonURL = &req.Button.URL
+	}
+	if err := telegram.SendMessage(req.Message, buttonText, buttonURL); err != nil {
 		log.Printf("Failed to send message to Telegram: %v", err)
 		http.Error(w, "Failed to send message", http.StatusInternalServerError)
 		return

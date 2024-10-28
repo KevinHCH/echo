@@ -33,12 +33,25 @@ func NewTelegramBot() (*TelegramBot, error) {
 	}, nil
 }
 
-func (bot *TelegramBot) SendMessage(message string) error {
+func (bot *TelegramBot) SendMessage(message string, buttonText *string, buttonURL *string) error {
 	payload := map[string]interface{}{
 		"chat_id":                  bot.ChatID,
 		"text":                     message,
-		"parse_mode":               "HTML",
+		"parse_mode":               "MarkdownV2",
 		"disable_web_page_preview": true,
+	}
+
+	if buttonText != nil && buttonURL != nil {
+		payload["reply_markup"] = map[string]interface{}{
+			"inline_keyboard": [][]map[string]string{
+				{
+					{
+						"text": *buttonText,
+						"url":  *buttonURL,
+					},
+				},
+			},
+		}
 	}
 
 	jsonPayload, err := json.Marshal(payload)
