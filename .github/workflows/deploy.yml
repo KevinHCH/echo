@@ -31,9 +31,11 @@ jobs:
             # Navigate to the project directory
             cd /home/kevin/projects/echo
 
+            DOCKER_IMAGE=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+
             # Pull the latest Docker images
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ghcr.io/${{ github.repository }}/echo:latest
+            docker pull ghcr.io/$DOCKER_IMAGE:latest
 
             # Set environment variables and start the app
             echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" > .env
@@ -46,7 +48,7 @@ jobs:
               --name echo \
               --env-file .env \
               -p 8080:8080 \
-              ghcr.io/${{ github.repository }}/echo:latest
+              ghcr.io/$DOCKER_IMAGE:latest
 
             # Optional: Clean up unused images
             docker image prune -f
