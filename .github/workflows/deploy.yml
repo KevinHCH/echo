@@ -2,14 +2,19 @@ name: "deploy"
 run-name: "Deploy to server"
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI - Build and Push Docker Image"]
+    types:
+      - completed
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout the repository
@@ -27,7 +32,8 @@ jobs:
             cd /home/kevin/projects/echo
 
             # Pull the latest Docker images
-            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            docker pull ghcr.io/${{ github.repository }}/echo:latest
 
             # Set environment variables and start the app
             echo "TELEGRAM_CHAT_ID=${{ secrets.TELEGRAM_CHAT_ID }}" > .env
@@ -40,7 +46,7 @@ jobs:
               --name echo \
               --env-file .env \
               -p 8080:8080 \
-              dkrkev/echo:latest
+              ghcr.io/${{ github.repository }}/echo:latest
 
             # Optional: Clean up unused images
             docker image prune -f
