@@ -6,6 +6,11 @@ on:
   push:
     branches:
       - main
+permissions:
+  contents: read # Required to read repository content
+  packages: write # Required to push to GHCR
+  repo: write # Required for repository access
+  workflow: write
 
 jobs:
   docker:
