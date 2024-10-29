@@ -14,7 +14,13 @@ ENV GOFLAGS="-buildmode=pie"
 RUN go build -ldflags "-s -w" -trimpath -o /workdir/echo ./api/*.go
 
 FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y --no-install-recommends redis-server libatomic1 && \
+# RUN apt-get update && apt-get install -y --no-install-recommends redis-server libatomic1 && \
+#   apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  redis-server \
+  libatomic1 \
+  ca-certificates && \
   apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /workdir/echo /bin/echo
