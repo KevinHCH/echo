@@ -37,8 +37,8 @@ jobs:
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
 
             # Stop and remove container
-            docker stop ghcr.io/$DOCKER_IMAGE:latest
-            docker rm ghcr.io/$DOCKER_IMAGE:latest
+            docker stop echo
+            docker rm echo
             docker pull ghcr.io/$DOCKER_IMAGE:latest
 
             # Set environment variables and start the app
