@@ -35,6 +35,10 @@ jobs:
 
             # Pull the latest Docker images
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+
+            # Stop and remove container
+            docker stop ghcr.io/$DOCKER_IMAGE:latest
+            docker rm ghcr.io/$DOCKER_IMAGE:latest
             docker pull ghcr.io/$DOCKER_IMAGE:latest
 
             # Set environment variables and start the app
@@ -45,6 +49,7 @@ jobs:
 
             # run the docker image
             docker run -d \
+              --name echo \
               --env-file .env \
               -p 8080:8080 \
               ghcr.io/$DOCKER_IMAGE:latest
