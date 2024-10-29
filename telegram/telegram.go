@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type TelegramBot struct {
@@ -32,11 +33,23 @@ func NewTelegramBot() (*TelegramBot, error) {
 		BaseURL: "https://api.telegram.org/bot%s/sendMessage",
 	}, nil
 }
+func escapeSpecialChars(text string) string {
+	// specialChars := []string{
+	// 	"\\", "_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!", "$", ":", ",", ";", "?", "@", "\"", "'",
+	// }
+	specialChars := []string{
+		"\\", "~", "`", "#", "+", "-", "=", "|", "{", "}", ".", "!", ":", ",", ";", "?", "@", "\"", "'",
+	}
 
+	for _, char := range specialChars {
+		text = strings.ReplaceAll(text, char, "\\"+char)
+	}
+	return text
+}
 func (bot *TelegramBot) SendMessage(message string, buttonText *string, buttonURL *string) error {
 	payload := map[string]interface{}{
 		"chat_id":                  bot.ChatID,
-		"text":                     message,
+		"text":                     escapeSpecialChars(message),
 		"parse_mode":               "MarkdownV2",
 		"disable_web_page_preview": true,
 	}
@@ -55,6 +68,8 @@ func (bot *TelegramBot) SendMessage(message string, buttonText *string, buttonUR
 	}
 
 	jsonPayload, err := json.Marshal(payload)
+	// fmt.Printf("Sending payload: %s\n", jsonPayload)
+
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON payload: %w", err)
 	}
