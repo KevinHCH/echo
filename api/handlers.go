@@ -19,7 +19,7 @@ type MessageRequest struct {
 	TopicName *string         `json:"topicName,omitempty"`
 	Title     *string         `json:"title,omitempty"`
 	Message   string          `json:"message"`
-	Enqueue   bool            `json:"enqueue"`
+	Enqueue   *bool           `json:"enqueue,omitempty"`
 	Time      *int64          `json:"time,omitempty"`
 	Button    *TelegramButton `json:"button,omitempty"`
 }
@@ -56,7 +56,7 @@ func (app *application) HandleMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Enqueue {
+	if req.Enqueue != nil && *req.Enqueue {
 		ttl := time.Duration(*req.Time) * time.Second
 		err = rd.Enqueue(ctx, uniqueId, message, ttl)
 		if err != nil {
@@ -64,7 +64,6 @@ func (app *application) HandleMessage(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not enqueue message", http.StatusInternalServerError)
 			return
 		}
-
 	}
 
 	telegram, err := telegram.NewTelegramBot()
